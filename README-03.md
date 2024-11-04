@@ -50,7 +50,7 @@ mysql> select * from payment where DATE(payment_date) between '2005-06-15' and '
 #### Ответ:  
 Не корректная формулировка вопроса: что такое "последних аренд"?
 * выданных последними в аренду?
-* возвращенных последними из аренды??  
+* возвращенных последними из аренды??
 Ввиду кривой постановки вопроса делаю выборку по последним 5 выданным в аренду.
 ``` bash
 mysql> select * from rental order by rental_date desc limit 5;
@@ -67,7 +67,7 @@ mysql> select * from rental order by rental_date desc limit 5;
 #### Ответ:  
 Не корректная формулировка вопроса: в таблице customer имеются 2 поля, связнных с именем покупателя:  
 * first_name: The customer first name.  
-* last_name: The customer last name.  
+* last_name: The customer last name.
 Ввиду кривой постановки задачи выборка будет вестись по обоим полям.  
 И перевод в нижний регистр будет сделан также для значений всех полей, если хотя бы одно из полей удовлетворяет условию.
 ``` bash
