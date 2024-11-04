@@ -73,26 +73,100 @@ mysql> SELECT GRANTEE, PRIVILEGE_TYPE FROM information_schema.user_privileges WH
 Для смены типа аутентификации с sha2 используйте запрос:  
 ALTER USER 'sys_temp'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';  
 #### Ответ:  
-  
+``` bash
+mysql> exit
+$ docker exec -it mysql-debian1 mysql -u sys_temp -ptemppasswd -h localhost
+mysql> SELECT USER();
++--------------------+
+| USER()             |
++--------------------+
+| sys_temp@localhost |
++--------------------+
+1 row in set (0.00 sec)
+```  
+![user-privileges](02-img/12-02-mysql-task-1-reconnect-with-user-sys_temp.png)
   
 1.6. По ссылке https://downloads.mysql.com/docs/sakila-db.zip скачайте дамп базы данных.  
-#### Ответ:    
-  
-  
 1.7. Восстановите дамп в базу данных.  
 #### Ответ:  
+1. Expose two directories - one for datadir adn another for backups  
+``` bash
+$ mkdir ~/HW-12-DataBases/02-files/mysql-datadir
+$ mkdir ~/HW-12-DataBases/02-files/mysql-backups
+```
+2. Run mysql container with binded volumes from created directories  
+``` bash
+$ docker run --name mysql-debian1 \
+--mount type=bind,src=/home/user/HW-12-DataBases/02-files/mysql-datadir,dst=/var/lib/mysql \
+--mount type=bind,src=/home/user/HW-12-DataBases/02-files/mysql-backups,dst=/data/backups \ 
+-e MYSQL_ROOT_PASSWORD=rootpasswd \
+-d mysql:8.0.40-debian
+```  
+3. Create new database which will be restored from db sakila backup  
+``` bash
+$ docker exec -it mysql-debian1 mysql -u sys_temp -ptemppasswd
+mysql> CREATE DATABASE sakila;
+```  
+4. Connect to shell of running container and execute database restoring process
+``` bash
+$ docker exec -it mysql-debian1 bash
+# then restore sakila database schema
+root@c324a604aef2:/# cat /data/backups/sakila-schema.sql | grep -v ^INSERT | mysql -u sys_temp -ptemppasswd sakila 
+# then restore tables with their data
+root@c324a604aef2:/# cat /data/backups/sakila-data.sql | mysql -u sys_temp --password=temppasswd sakila
+# then connect throught mysql cli to sakila database with sys_temp user
+root@c324a604aef2:/# mysql -u sys_temp -ptemppasswd sakila
+# then check database tables
+mysql> show tables;
++----------------------------+
+| Tables_in_sakila           |
++----------------------------+
+| actor                      |
+| actor_info                 |
+| address                    |
+| category                   |
+| city                       |
+| country                    |
+| customer                   |
+| customer_list              |
+| film                       |
+| film_actor                 |
+| film_category              |
+| film_list                  |
+| film_text                  |
+| inventory                  |
+| language                   |
+| nicer_but_slower_film_list |
+| payment                    |
+| rental                     |
+| sales_by_film_category     |
+| sales_by_store             |
+| staff                      |
+| staff_list                 |
+| store                      |
++----------------------------+
+```  
 
-  
 1.8. При работе в IDE сформируйте ER-диаграмму получившейся базы данных. При работе в командной строке используйте команду для получения всех таблиц базы данных. (скриншот)  
 Результатом работы должны быть скриншоты обозначенных заданий, а также простыня со всеми запросами.  
 #### Ответ:  
+As shown above:
+![restored-sakila-tables](02-img/12-02-mysql-task-1-restoring-database-sakila.png)  
   
-
 ### Задание 2
 Составьте таблицу, используя любой текстовый редактор или Excel, в которой должно быть два столбца: в первом должны быть названия таблиц восстановленной базы, во втором названия первичных ключей этих таблиц. Пример: (скриншот/текст)
 
 Название таблицы | Название первичного ключа
 customer         | customer_id
+
+#### Ответ:  
+While connected to mysql cli:  
+``` bash
+mysql> SELECT TABLE_NAME, COLUMN_NAME
+    -> FROM INFORMATION_SCHEMA.COLUMNS
+    -> WHERE TABLE_SCHEMA = 'sakila' AND COLUMN_KEY = 'PRI' ORDER BY table_name;
+```
+![sakila-tables-pri-keys](02-img/12-02-mysql-task-2-sakila-tables-pri-keys.png)
 
 ---
 
@@ -100,8 +174,18 @@ customer         | customer_id
 Эти задания дополнительные, то есть не обязательные к выполнению, и никак не повлияют на получение вами зачёта по этому домашнему заданию. Вы можете их выполнить, если хотите глубже шире разобраться в материале.
 
 ### Задание 3*
-3.1. Уберите у пользователя sys_temp права на внесение, изменение и удаление данных из базы sakila.
-
-3.2. Выполните запрос на получение списка прав для пользователя sys_temp. (скриншот)
+3.1. Уберите у пользователя sys_temp права на внесение, изменение и удаление данных из базы sakila.  
+#### Ответ:  
+``` bash
+mysql> REVOKE INSERT, UPDATE, DELETE ON `sakila`.* FROM 'sys_temp'@'localhost';
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+```
+  
+3.2. Выполните запрос на получение списка прав для пользователя sys_temp. (скриншот)  
+#### Ответ:  
+``` bash
+mysql> SHOW GRANTS FOR 'sys_temp'@'localhost';
+```  
+![sakila-tables-pri-keys](02-img/12-02-mysql-task-3-revoke-user-sys_temp-privilehes.png)
 
 Результатом работы должны быть скриншоты обозначенных заданий, а также простыня со всеми запросами.
