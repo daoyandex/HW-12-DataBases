@@ -89,6 +89,16 @@ mysql> SELECT USER();
 1.6. По ссылке https://downloads.mysql.com/docs/sakila-db.zip скачайте дамп базы данных.  
 1.7. Восстановите дамп в базу данных.  
 #### Ответ:  
+I. Следуем руководству по БД sakila  
+Execute the sakila-schema.sql script to create the database structure, and execute the sakiladata.sql script to populate the database structure, by using the following commands:  
+``` bash
+mysql> SOURCE /data/backups/sakila-schema.sql;
+mysql> SOURCE /data/backups/sakila-data.sql;
+```  
+Replace the paths to the sakila-schema.sql and sakila-data.sql files with the actual paths on your system.  
+  
+II. Изъ*бства, которые следуют далее - это результат самостоятельных поисков в интернетах.
+Потому что уроды, которые писали это задание, не удосужились сразу написать, что по базе sakila есть руководство от ее изготовителей, где четко прописано как именно недо восстанавливать её из архива.
 1. Expose two directories - one for datadir and another for backups  
 ``` bash
 $ mkdir ~/HW-12-DataBases/02-files/mysql-datadir
