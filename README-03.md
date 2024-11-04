@@ -26,7 +26,14 @@
 Получите уникальные названия районов из таблицы с адресами, которые начинаются на “K” и заканчиваются на “a” и не содержат пробелов.  
 #### Ответ:  
 ``` bash
-mysql> select distinct  adr.district from address as adr where district like "K%a";
+mysql> 
+select distinct  
+   adr.district 
+from address as adr 
+where 
+   district like "K%a"
+   and district not like "K% %a"
+;
 ```  
 ![districts](03-img/12-03-mysql-task-1-table-address-district.png)
   
