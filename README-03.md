@@ -28,7 +28,7 @@
 ``` bash
 mysql> select distinct  adr.district from address as adr where district like "K%a";
 ```  
-![show-user-grants](03-img/12-03-mysql-task-1-table-address -district.png)
+![districts](03-img/12-03-mysql-task-1-table-address-district.png)
   
 ### Задание 2  
 Получите из таблицы платежей за прокат фильмов информацию по платежам, которые выполнялись в промежуток с 15 июня 2005 года по 18 июня 2005 года включительно и стоимость которых превышает 10.00.
