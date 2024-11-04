@@ -119,7 +119,7 @@ LIMIT 5;
 select 
    email as email, 
    CASE 
-      WHEN POSITION('@' IN email)>0 AND LENGTH(SUBSTR(email,1,POSITION('@' IN email)-1))>0
+      WHEN POSITION('@' IN email)>0
          THEN CONCAT(
                UPPER(LEFT(SUBSTR(email,1,POSITION('@' IN email)-1) , 1)), 
                LOWER(RIGHT(SUBSTR(email,1,POSITION('@' IN email)-1), LENGTH(SUBSTR(email,1,POSITION('@' IN email)-1))-1))
