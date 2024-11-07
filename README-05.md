@@ -98,6 +98,7 @@ EXPLAIN ANALYZE дает:
                         -> Index range scan on p using idx_payment_date over ('2005-07-30 00:00:00' <= payment_date < '2005-07-31 00:00:00'), with index condition: ((p.payment_date >= TIMESTAMP'2005-07-30 00:00:00') and (p.payment_date < <cache>(('2005-07-30' + interval 1 day))))  (cost=286 rows=634) (actual time=0.693..1.86 rows=634 loops=1)
                         -> Single-row index lookup on c using PRIMARY (customer_id=p.customer_id)  (cost=0.25 rows=1) (actual time=0.00219..0.00224 rows=1 loops=634)
  |
+1 row in set (0.01 sec)
 ```
 
 Объяснение:
@@ -111,16 +112,10 @@ CREATE INDEX idx_payment_date ON payment (payment_date);
   
 В заключние можно отметить второй вариант запроса - с отказом от оконной функции и переходом к обычной группировке:  
 ``` bash
-select 
-   concat(c.last_name, ' ', c.first_name) as a, 
-   sum(p.amount) 
-from payment p 
-      join customer c 
-         on p.customer_id = c.customer_id 
-where 
-   p.payment_date >= '2005-07-30' 
-   AND p.payment_date < DATE_ADD('2005-07-30', INTERVAL 1 DAY) group by a
-;
+select concat(c.last_name, ' ', c.first_name) as a, sum(p.amount) 
+from payment p join customer c on p.customer_id = c.customer_id 
+where p.payment_date >= '2005-07-30' AND p.payment_date < DATE_ADD('2005-07-30', INTERVAL 1 DAY) 
+group by a;
 ```
 EXPLAIN ANALYZE дает:  
 ``` bash
@@ -130,9 +125,9 @@ EXPLAIN ANALYZE дает:
             -> Index range scan on p using idx_payment_date over ('2005-07-30 00:00:00' <= payment_date < '2005-07-31 00:00:00'), with index condition: ((p.payment_date >= TIMESTAMP'2005-07-30 00:00:00') and (p.payment_date < <cache>(('2005-07-30' + interval 1 day))))  (cost=286 rows=634) (actual time=0.636..1.43 rows=634 loops=1)
             -> Single-row index lookup on c using PRIMARY (customer_id=p.customer_id)  (cost=0.25 rows=1) (actual time=0.00138..0.00141 rows=1 loops=634)
  |
-
+1 row in set (0.01 sec)
 ```  
-Данный вариант по сравнению с предыдущим является более быстрым.
+Данный вариант по сравнению с предыдущим является немного более быстрым.
 И при отсутствии необходимости в конечном результате прочих полей (типа file.title) - более предпочтительным.
 
 ---
