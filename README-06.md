@@ -46,23 +46,21 @@
 Выполните конфигурацию master-slave репликации, примером можно пользоваться из лекции.  
 Приложите скриншоты конфигурации, выполнения работы: состояния и режимы работы серверов.  
 #### Ответ:
-0. Перечень команд для подготовки 
+**0. Перечень команд для подготовки**  
 - контейнеров,  
 - добавления пользователей в базах данных с правом репликации,  
 - изменений в /etc/my.cnf контейнеров,
-- изменений в настройках инстанса slave
+- изменений в настройках инстанса slave  
 [preparation-commands](/06-files/preparation-commands.md)
-
-1. База master  
-- Конфигурация master
-[master_my.cnf](06-files/replica-master__/etc/my.cnf)  
+  
+**1. База master**  
+- Конфигурация master: [master_my.cnf](06-files/replica-master__/etc/my.cnf)  
 ![replica-master-conf](06-img/12-06-mysql-repl-task-2-master.png)  
-- базы данных  
+- Базы данных  
 ![replica-master-databases](06-img/12-06-replication-task-2-master-bases.png)  
   
-2. База slave 
-- Конфигурация slave:
-[slave_my.cnf](06-files/replica-slave__/etc/my.cnf)  
+**2. База slave**  
+- Конфигурация slave: [slave_my.cnf](06-files/replica-slave__/etc/my.cnf)  
 ``` bash
 mysql> SHOW SLAVE STATUS\G
 *************************** 1. row ***************************
@@ -130,9 +128,9 @@ Master_SSL_Verify_Server_Cert: No
 
 mysql> 
 ```  
-- базы данных slave:
+- Базы данных slave:  
 ![replica-slave-databases](06-img/12-06-replication-task-2-slave-bases.png) 
-
+  
 ---
 
 Дополнительные задания (со звёздочкой*)
@@ -143,7 +141,7 @@ mysql>
 Приложите скриншоты конфигурации, выполнения работы: состояния и режимы работы серверов.  
 
 #### Ответ:
-1. Создаем два контейнера по образу `mysql:8.3`
+**1. Создаем два контейнера по образу `mysql:8.3`**  
 ``` bash
 # Создаем первый мастер
 docker run -d --name master1 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql:8.3
@@ -151,7 +149,7 @@ docker run -d --name master1 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql:8.3
 # Создаем второй мастер
 docker run -d --name master2 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql:8.3
 ```  
-2. Создаем и настраиваем первый мастер (master1)
+**2. Создаем и настраиваем первый мастер (master1)**  
 ``` bash
 docker exec -it master1 mysql
 
@@ -172,7 +170,7 @@ mysql> SHOW MASTER STATUS\G
 Executed_Gtid_Set:
 ```  
 
-3. Создаем и настраиваем второй мастер (master2)
+**3. Создаем и настраиваем второй мастер (master2)**  
 ``` bash
 docker exec -it master2 mysql
 
@@ -193,7 +191,7 @@ mysql> SHOW MASTER STATUS\G
 Executed_Gtid_Set:
 ```  
 
-4. На master1 настраиваем репликацию 
+**4. На master1 настраиваем репликацию** 
 ``` bash
 mysql> stop slave;
 mysql> CHANGE MASTER TO 
@@ -219,7 +217,8 @@ mysql> SHOW SLAVE STATUS\G
              Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
 ```  
-5. На master2 настраиваем репликацию  
+
+**5. На master2 настраиваем репликацию**  
 ``` bash
 msql> stop slave;
 mysql> CHANGE MASTER TO 
@@ -245,9 +244,9 @@ mysql> SHOW SLAVE STATUS\G
              Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
 ```
-
+  
 ##### Проверка работы репликации. 
-1. На master1:  
+**1. На master1:**  
 ``` bash
 mysql> use testdb;
 mysql> create table sample (id INT, test_col VARCHAR(100));
@@ -262,7 +261,7 @@ mysql> select * from sample;
 +------+------------------+
 ```  
 
-2. На master2  
+**2. На master2**  
 ``` bash
 mysql> use testdb;
 mysql> select * from sample;
@@ -276,7 +275,7 @@ mysql> select * from sample;
 mysql> insert into sample values (2, 'Add from master2');
 ```
 
-3. Проверяем репликацию обратно на master1  
+**3. Проверяем репликацию обратно на master1** 
 ``` bash
 mysql> select * from sample;
 +------+------------------+
@@ -287,13 +286,13 @@ mysql> select * from sample;
 +------+------------------+
 ```
   
-3. Настройка AUTO_INCREMENT для предотвращения конфликтов:
-- на master1
+**4. Настройка AUTO_INCREMENT для предотвращения конфликтов:**  
+- на master1  
 ``` bash
 SET GLOBAL auto_increment_increment=2;
 SET GLOBAL auto_increment_offset=1;
 ```
-- на master2
+- на master2  
 ``` bash
 SET GLOBAL auto_increment_increment=2;
 SET GLOBAL auto_increment_offset=2;
