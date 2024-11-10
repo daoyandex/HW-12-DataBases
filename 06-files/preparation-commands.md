@@ -66,28 +66,22 @@ docker restart replication-slave
 ```
 
 
-6.
-
+5. Произведем настройку mysql на replica-slave
+``` bash
 $ docker exec -it replica-slave mysql -uroot -p
 Enter password: 
-Welcome to the MySQL monitor.  Commands end with ; or \g.
-Your MySQL connection id is 8
-Server version: 8.3.0 MySQL Community Server - GPL
-
-Copyright (c) 2000, 2024, Oracle and/or its affiliates.
-
-Oracle is a registered trademark of Oracle Corporation and/or its
-affiliates. Other names may be trademarks of their respective
-owners.
-
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
 mysql> CHANGE MASTER TO MASTER_HOST='replica-master', MASTER_USER='replication', MASTER_LOG_FILE='mysql-bin.000001', MASTER_LOG_POS=158;
+
 ERROR 3021 (HY000): This operation cannot be performed with a running replica io thread; run STOP REPLICA IO_THREAD FOR CHANNEL '' first.
+
 mysql> STOP REPLICA IO_THREAD FOR CHANNEL '';
 Query OK, 0 rows affected (0.00 sec)
 
-mysql> CHANGE MASTER TO MASTER_HOST='replica-master', MASTER_USER='replication', MASTER_LOG_FILE='mysql-bin.000001', MASTER_LOG_POS=158;
+mysql> CHANGE MASTER TO MASTER_HOST='replica-master', 
+MASTER_USER='replication', 
+MASTER_LOG_FILE='mysql-bin.000001', 
+MASTER_LOG_POS=158;
+
 Query OK, 0 rows affected, 7 warnings (0.00 sec)
 
 mysql> START REPLICA IO_THREAD FOR CHANNEL '';
@@ -158,6 +152,7 @@ Master_SSL_Verify_Server_Cert: No
 1 row in set, 1 warning (0.00 sec)
 
 mysql>
+```
 
 
 

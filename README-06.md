@@ -46,10 +46,23 @@
 Выполните конфигурацию master-slave репликации, примером можно пользоваться из лекции.  
 Приложите скриншоты конфигурации, выполнения работы: состояния и режимы работы серверов.  
 #### Ответ:
-1. Конфигурация master  
-![replica-master-conf](06-img/12-06-mysql-repl-task-2-master.png) 
+0. Перечень команд для подготовки 
+- контейнеров,  
+- добавления пользователей в базах данных с правом репликации,  
+- изменений в /etc/my.cnf контейнеров,
+- изменений в настройках инстанса slave
+[preparation-commands](/06-files/preparation-commands.md)
 
-2. Конфигурация slave:  
+1. База master  
+- Конфигурация master
+[master_my.cnf](06-files/replica-master__/etc/my.cnf)  
+![replica-master-conf](06-img/12-06-mysql-repl-task-2-master.png)  
+- базы данных  
+![replica-master-databases](06-img/12-06-replication-task-2-master-bases.png)  
+  
+2. База slave 
+- Конфигурация slave:
+[slave_my.cnf](06-files/replica-slave__/etc/my.cnf)  
 ``` bash
 mysql> SHOW SLAVE STATUS\G
 *************************** 1. row ***************************
@@ -116,7 +129,9 @@ Master_SSL_Verify_Server_Cert: No
 1 row in set, 1 warning (0.00 sec)
 
 mysql> 
-```
+```  
+- базы данных slave:
+![replica-slave-databases](06-img/12-06-replication-task-2-slave-bases.png) 
 
 ---
 
@@ -128,3 +143,158 @@ mysql>
 Приложите скриншоты конфигурации, выполнения работы: состояния и режимы работы серверов.  
 
 #### Ответ:
+1. Создаем два контейнера по образу `mysql:8.3`
+``` bash
+# Создаем первый мастер
+docker run -d --name master1 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql:8.3
+
+# Создаем второй мастер
+docker run -d --name master2 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql:8.3
+```  
+2. Создаем и настраиваем первый мастер (master1)
+``` bash
+docker exec -it master1 mysql
+
+# Создаем пользователя для репликации
+mysql> create user 'replication'@'%';
+mysql> grant replication slave on *.* TO 'replication'@'%';
+
+# Создаем тестовую базу данных
+mysql> create database testdb;
+
+# Проверяем статус master1
+mysql> SHOW MASTER STATUS\G
+*************************** 1. row ***************************
+             File: mysql-bin.000001
+         Position: 158
+     Binlog_Do_DB:
+ Binlog_Ignore_DB:
+Executed_Gtid_Set:
+```  
+
+3. Создаем и настраиваем второй мастер (master2)
+``` bash
+docker exec -it master2 mysql
+
+# Создаем пользователя для репликации
+mysql> create user 'replication'@'%';
+mysql> grant replication slave on *.* TO 'replication'@'%';
+
+# Создаем тестовую базу данных
+mysql> create database testdb;
+
+# Проверяем статус master2
+mysql> SHOW MASTER STATUS\G
+*************************** 1. row ***************************
+             File: mysql-bin.000001
+         Position: 158
+     Binlog_Do_DB:
+ Binlog_Ignore_DB:
+Executed_Gtid_Set:
+```  
+
+4. На master1 настраиваем репликацию 
+``` bash
+mysql> stop slave;
+mysql> CHANGE MASTER TO 
+    MASTER_HOST='master2',
+    MASTER_USER='replication',
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=158;
+mysql> start slave;
+
+# Проверяем статус репликации
+mysql> SHOW SLAVE STATUS\G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for source to send event
+                  Master_Host: master2
+                  Master_User: replication
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: mysql-bin.000001
+          Read_Master_Log_Pos: 158
+               Relay_Log_File: mysql-relay-bin.000002
+                Relay_Log_Pos: 326
+        Relay_Master_Log_File: mysql-bin.000001
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+```  
+5. На master2 настраиваем репликацию  
+``` bash
+msql> stop slave;
+mysql> CHANGE MASTER TO 
+    MASTER_HOST='master1',
+    MASTER_USER='replication',
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=157;
+mysql> start slave;
+
+# Проверяем статус репликации
+mysql> SHOW SLAVE STATUS\G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for source to send event
+                  Master_Host: master1
+                  Master_User: replication
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: mysql-bin.000001
+          Read_Master_Log_Pos: 158
+               Relay_Log_File: mysql-relay-bin.000002
+                Relay_Log_Pos: 326
+        Relay_Master_Log_File: mysql-bin.000001
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+```
+
+##### Проверка работы репликации. 
+1. На master1:  
+``` bash
+mysql> use testdb;
+mysql> create table sample (id INT, test_col VARCHAR(100));
+mysql> insert into sample values (1, 'Add from master1');
+
+# Проверяем данные
+mysql> select * from sample;
++------+------------------+
+| id   | test_col         |
++------+------------------+
+|    1 | Add from master1 |
++------+------------------+
+```  
+
+2. На master2  
+``` bash
+mysql> use testdb;
+mysql> select * from sample;
++------+------------------+
+| id   | test_col         |
++------+------------------+
+|    1 | Add from master1 | 
++------+------------------+
+
+# Добавляем данные с master2  
+mysql> insert into sample values (2, 'Add from master2');
+```
+
+3. Проверяем репликацию обратно на master1  
+``` bash
+mysql> select * from sample;
++------+------------------+
+| id   | test_col         |
++------+------------------+
+|    1 | Add from master1 |
+|    2 | Add from master2 |
++------+------------------+
+```
+  
+3. Настройка AUTO_INCREMENT для предотвращения конфликтов:
+- на master1
+``` bash
+SET GLOBAL auto_increment_increment=2;
+SET GLOBAL auto_increment_offset=1;
+```
+- на master2
+``` bash
+SET GLOBAL auto_increment_increment=2;
+SET GLOBAL auto_increment_offset=2;
+```
