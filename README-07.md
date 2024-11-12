@@ -43,17 +43,20 @@
 - в таблицах шардов те же колонки;  
 - разделение возможно по количественным блокам (id), но также и по фактическому местоположенияю (через user address и store address) или дркгому критерию (в зависимости от добавленных полей таблиц).
   
-* Пользователи  
+* Пользователи
+``` bash  
 | USER shard_1            |  | USER shard_2            | ... | USER shard_N                  |  
-| ----------------------- |  | ----------------------- | ... | ----------------------------- |
+| ----------------------- |  | ----------------------- | ... | ----------------------------- |  
 | user_id         (1-100) |  | user_id       (101-200) | ... | user_id ((N-1)x100+1 - N*100) |  
 | first_name              |  | first_name              | ... | first_name                    |  
 | last_name               |  | last_name               | ... | last_name                     |  
 | password                |  | password                | ... | password                      |  
 | address                 |  | address                 | ... | address                       |  
 | main_store              |  | main_store              | ... | main_store                    |  
+```  
 
 * Книги  
+``` bash  
 | BOOKS shard_1           |  | BOOKS shard_2           | ... | BOOKS shard_N                 |  
 | ----------------------- |  | ----------------------- | ... | ----------------------------- |
 | book_id   range (1-100) |  | book_id range (101-200) | ... | book_id ((N-1)x100+1 - N*100) |  
@@ -64,41 +67,49 @@
 | year                    |  | year                    | ... | year                          |    
 | copy_number             |  | copy_number             | ... | copy_number                   |  
 | store_id                |  | store_id                | ... | store_id                      |  
+```  
 
-* Магазины  
+* Магазины
+``` bash    
 | STORES shard_1          |  | STORES shadr_2          | ... | STORES shard_N                |  
 | ----------------------- |  | ----------------------- | ... | ----------------------------- |
 | store_id  range (1-10)  |  | store_id  range (11-20) | ... | store_id ((N-1)x10+1 - N*10)  |  
 | name                    |  | name                    | ... | name                          |  
 | address                 |  | address                 | ... | address                       |  
 | chief_manager           |  | chief_manager           | ... | chief_manager                 |  
+```  
 
 **2. Вертикальный шардинг**  
 - в таблицах шардов разные колонки, данные объединены ключевым полем (primary key таблицы);  
 - разделение колонок в некоторых случаях полезно для безопасности, а также для оптимизации и ускорения доступа к ним (например, посредством создания своих индексов).
 
 * Пользователи  
+``` bash  
 | USER shard_1 (name)     |  | USER shard_authorization| ... | USER shadr_stores     |  
 | ----------------------- |  | ----------------------- | ... | --------------------- |
 | user_id                 |  | user_id                 | ... | user_id               |  
 | first_name              |  | password                | ... | main_store            |  
 | last_name               |
 | address                 |
+```  
 
 * Книги  
+``` bash  
 | BOOKS shard_name        |  | BOOKS shard_publication | ... | BOOKS shard_stores  |  
 | ----------------------- |  | ----------------------- | ... | --------------------|
 | book_id                 |  | book_id                 | ... | book_id             |  
 | header                  |  | publisher               | ... | copy_number         |  
 | author                  |  | edition_number          | ... | store_id            |  
 |                         |  | year                    | ... |                     |  
+```  
 
-* Магазины  
+* Магазины
+``` bash    
 | STORES shard_label      |  | STORES shadr_address    | ... | STORES shard_chief  |  
 | ----------------------- |  | ----------------------- | ... | ------------------- |
 | store_id                |  | store_id                | ... | store_id            |  
 | name                    |  | address                 | ... | chief_manager       |  
-
+```
 
 
 
