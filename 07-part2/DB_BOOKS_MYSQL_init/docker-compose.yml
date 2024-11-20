@@ -1,0 +1,81 @@
+version: '2.29'
+
+services:
+  # Конфигурация для шарда пользователей 1
+  postgres_books:
+    image: postgres:latest
+    container_name: "postgres_books"
+    environment:
+      POSTGRES_DB: "books"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - "5632:5432"
+    volumes:
+      - ./conf/postgres_b:/scripts
+      #- ./init-users-shard1.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - postgres_network
+
+  # Конфигурация для шарда пользователей 2
+  users-shard2:
+    image: mysql:8.3
+    container_name: users-shard2
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: users_db
+    volumes:
+      - ./init-users-shard2.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3308:3306"
+    networks:
+      - shard-network
+
+  # Конфигурация для шарда книг
+  books-shard:
+    image: mysql:8.0
+    container_name: books-shard
+    environment:
+      MYSQL_ROOT_PASSWORD: root_passwd
+      MYSQL_DATABASE: books_db
+    volumes:
+      - ./init-books.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3309:3306"
+    networks:
+      - shard-network
+
+  # Конфигурация для шарда магазинов
+  stores-shard:
+    image: mysql:8.0
+    container_name: stores-shard
+    environment:
+      MYSQL_ROOT_PASSWORD: root_passwd
+      MYSQL_DATABASE: stores_db
+    volumes:
+      - ./init-stores.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3310:3306"
+    networks:
+      - shard-network
+
+  # Прокси для маршрутизации запросов
+  proxy:
+    image: haproxy:2.3
+    container_name: mysql-proxy
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - shard-network
+    depends_on:
+      - users-shard1
+      - users-shard2
+      - books-shard
+      - stores-shard
+
+networks:
+  postgres_network:
+    driver: bridge
