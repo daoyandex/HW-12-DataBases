@@ -79,15 +79,18 @@ DO INSTEAD NOTHING;
 
 CREATE RULE books_insert_to_1 AS ON INSERT TO books
 WHERE (category_id <= 2)
-DO INSTEAD INSERT INTO books_1
-VALUES (NEW.*);
+DO INSTEAD 
+    INSERT INTO books_1
+    VALUES (NEW.*);
 
 CREATE RULE books_insert_to_2 AS ON INSERT TO books
-WHERE (category_id > 2 and category_id <= 4)
-DO INSTEAD INSERT INTO books_2
-VALUES (NEW.*);
+WHERE (category_id > 2 and category_id <= 3)
+DO INSTEAD 
+    INSERT INTO books_2
+    VALUES (NEW.*);
 
 CREATE RULE books_insert_to_3 AS ON INSERT TO books
-WHERE (category_id > 5)
-DO INSTEAD INSERT INTO books_3
-VALUES (NEW.*);
+WHERE (category_id >= 4)
+DO INSTEAD 
+    INSERT INTO books_3
+    VALUES (NEW.*);
