@@ -81,4 +81,5 @@ select * from test_table;
 
 ### Ответ:
 
-![test-table-jn-replica]HW-12-DataBases/09-img/img-12-9-replica-test-table.png
+![test-table-jn-replica-1](09-img/img-12-9-replica-test-table.png)
+![test-table-in-replica-2-from-dbeaver](09-img/img-12-9-connection-to-replica-from-dbeaver.png)
