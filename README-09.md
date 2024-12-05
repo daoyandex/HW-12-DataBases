@@ -45,6 +45,12 @@ select case when pg_is_in_recovery() then 'REPLICA' else 'MASTER' end;
 ``` bash
 select count(*) from pg_stat_replication;
 ```
+### Ответ:  
+1. Создание кластера выполнено через terraform: ![main.tf](HW-12-DataBases/09-mdb/main-09.tf)  
+  
+2. Скрин подключения и количества реплик (реплики 2, т.к. при создании HA-конфигурации требуется 2 хоста в одной зоне): 
+![cluster-master-node-replicas](09-img/img-12-9-connection-to-mdb-postgresql-cluster.png)
+
 
 **Проверьте работоспособность репликации в кластере** 
 
@@ -72,3 +78,7 @@ select * from test_table;
 
 В качестве результата вашей работы пришлите скриншоты:
 1) Созданной базы данных; 2) Результата вывода команды на реплике select * from test_table;.
+
+### Ответ:
+
+![test-table-jn-replica]HW-12-DataBases/09-img/img-12-9-replica-test-table.png
